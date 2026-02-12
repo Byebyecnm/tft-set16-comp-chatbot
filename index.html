@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TFT Set 16 - Early Game Comp Navigator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        /* Sol Panel - Sohbet */
+        .chat-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(30, 30, 46, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: rgba(20, 20, 30, 0.5);
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bot-message {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px;
+            border-radius: 10px;
+            line-height: 1.6;
+        }
+
+        .comp-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+
+        .comp-section {
+            margin: 10px 0;
+        }
+
+        .comp-section strong {
+            color: #ffd700;
+        }
+
+        .user-message {
+            background: rgba(100, 100, 120, 0.3);
+            padding: 12px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        /* Sağ Panel - Kontroller */
+        .control-panel {
+            width: 400px;
+            background: rgba(30, 30, 46, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            overflow-y: auto;
+        }
+
+        .control-section {
+            margin-bottom: 25px;
+        }
+
+        .control-section h3 {
+            color: #ffd700;
+            margin-bottom: 12px;
+            font-size: 16px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        /* Aşama Seçimi */
+        .stage-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .stage-btn {
+            padding: 10px;
+            background: rgba(100, 100, 120, 0.3);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            color: #e0e0e0;
+        }
+
+        .stage-btn:hover {
+            background: rgba(100, 100, 120, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .stage-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #ffd700;
+        }
+
+        /* Karakter Seçimi */
+        .champion-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .champion-item {
+            background: rgba(100, 100, 120, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .champion-item:hover {
+            background: rgba(100, 100, 120, 0.5);
+        }
+
+        .champion-item.selected {
+            border-color: #ffd700;
+            background: rgba(102, 126, 234, 0.3);
+        }
+
+        .champion-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .star-selector {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .star-btn {
+            padding: 4px 8px;
+            background: rgba(80, 80, 100, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .star-btn:hover {
+            background: rgba(100, 100, 120, 0.7);
+        }
+
+        .star-btn.active {
+            background: #ffd700;
+            color: #1a1a2e;
+            font-weight: bold;
+        }
+
+        /* Eşya Seçimi */
+        .item-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .item-btn {
+            padding: 10px 5px;
+            background: rgba(100, 100, 120, 0.3);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .item-btn:hover {
+            background: rgba(100, 100, 120, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .item-btn.selected {
+            border-color: #ffd700;
+            background: rgba(102, 126, 234, 0.3);
+        }
+
+        /* Gönder Butonu */
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(20, 20, 30, 0.5);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        .info-box {
+            background: rgba(102, 126, 234, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            border-left: 4px solid #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sol Panel - Sohbet Ekranı -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                <h1>🎮 TFT Set 16 - Comp Navigator</h1>
+                <p style="font-size: 14px; margin-top: 5px;">Erken oyun durumunuza göre kompozisyon önerisi alın</p>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message">
+                    <div class="bot-message">
+                        <div class="comp-name">📋 Nasıl Çalışır?</div>
+                        <div class="comp-section">
+                            <strong>1.</strong> Sağ taraftaki panelden oyun aşamanızı seçin<br>
+                            <strong>2.</strong> Elinizdeki karakterleri ve yıldız seviyelerini işaretleyin<br>
+                            <strong>3.</strong> Sahip olduğunuz eşyaları seçin<br>
+                            <strong>4.</strong> "Kompozisyon Öner" butonuna basın<br><br>
+                            Sistem, Set 16 meta kompozisyonlarını analiz edip size en uygun 1-3 kompozisyon önerecek! 🚀
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ Panel - Kontrol Paneli -->
+        <div class="control-panel">
+            <div class="info-box">
+                💡 <strong>İpucu:</strong> Bir karaktere tıklayınca yıldız seviyesini seçebilirsiniz. Birden fazla karakter ve eşya seçebilirsiniz.
+            </div>
+
+            <!-- Aşama Seçimi -->
+            <div class="control-section">
+                <h3>🎯 Oyun Aşaması</h3>
+                <div class="stage-buttons" id="stageButtons"></div>
+            </div>
+
+            <!-- Karakter Seçimi -->
+            <div class="control-section">
+                <h3>👥 Karakterler (Çoklu Seçim)</h3>
+                <div class="champion-grid" id="championGrid"></div>
+            </div>
+
+            <!-- Eşya Seçimi -->
+            <div class="control-section">
+                <h3>⚔️ Eşyalar (Çoklu Seçim)</h3>
+                <div class="item-grid" id="itemGrid"></div>
+            </div>
+
+            <button class="submit-btn" onclick="analyzeAndSuggest()">
+                🔍 Kompozisyon Öner
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // TFT SET 16 META KOMPOZİSYONLARI
+        // ============================================
+        const META_COMPS = [
+            {
+                name: "🔥 Blaster Enforcer (Caitlyn Carry)",
+                carries: ["Caitlyn", "Zeri"],
+                requiredChampions: ["Caitlyn", "Vi", "Warwick", "Maddie", "Zeri"],
+                recommendedItems: ["Guinsoo's Rageblade", "Giant Slayer", "Runaan's Hurricane", "Ionic Spark"],
+                playableStages: ["2-1", "2-5", "3-2", "3-5", "4-1"],
+                gameplan: "Early: Enforcer + Blaster ünitelerini toplayın. Mid: Caitlyn'i 2⭐ yapın ve temel eşyaları koyun. Late: Zeri ile patlama hasarı verin.",
+                reasons: ["Caitlyn güçlü erken carry", "Enforcer tanklık sağlar", "Eşya bağımlılığı orta seviye"]
+            },
+            {
+                name: "⚡ Rebel Bruiser (Ekko Hyperroll)",
+                carries: ["Ekko", "Powder"],
+                requiredChampions: ["Ekko", "Powder", "Scar", "Smeech", "Darius"],
+                recommendedItems: ["Infinity Edge", "Last Whisper", "Bloodthirster", "Sunfire Cape"],
+                playableStages: ["2-1", "2-5", "3-2"],
+                gameplan: "Early: 3 Rebel aktivasyonu yapın. Mid: Ekko'yu 3⭐ yapmaya çalışın (hyperroll). Late: Smeech ile frontline güçlendirin.",
+                reasons: ["Ekko 3⭐ çok güçlü", "Düşük maliyetli comp", "Hızlı spike"]
+            },
+            {
+                name: "🛡️ Form Swapper Sentinel (Jayce Carry)",
+                carries: ["Jayce", "Rell"],
+                requiredChampions: ["Jayce", "Rell", "Elise", "Steb", "Loris"],
+                recommendedItems: ["Titan's Resolve", "Warmog's Armor", "Gargoyle Stoneplate", "Ionic Spark"],
+                playableStages: ["3-2", "3-5", "4-1", "4-5"],
+                gameplan: "Early: Sentinel tanklarını biriktirin. Mid: Jayce'i 2⭐ yapın. Late: Form değiştirme combo'larıyla rakibi ezip geçin.",
+                reasons: ["Tank meta'da güçlü", "Jayce versatile carry", "Mid-late game dominasyonu"]
+            },
+            {
+                name: "🎭 Emissary Academy (Lux Reroll)",
+                carries: ["Lux", "Leona"],
+                requiredChampions: ["Lux", "Leona", "Zyra", "Nami", "Tristana"],
+                recommendedItems: ["Jeweled Gauntlet", "Archangel's Staff", "Blue Buff", "Ionic Spark"],
+                playableStages: ["2-5", "3-2", "3-5"],
+                gameplan: "Early: Academy synergy kurun. Mid: Lux 3⭐ için reroll. Late: Emissary buff'ları ile AoE patlaması yapın.",
+                reasons: ["Lux 3⭐ devasa hasar", "Academy ekonomi bonusu", "Magic damage threatleri"]
+            },
+            {
+                name: "🎯 Sniper Conqueror (Caitlyn + Ambessa)",
+                carries: ["Caitlyn", "Ambessa", "Tristana"],
+                requiredChampions: ["Caitlyn", "Ambessa", "Tristana", "Renata", "Elise"],
+                recommendedItems: ["Giant Slayer", "Last Whisper", "Runaan's Hurricane", "Bloodthirster"],
+                playableStages: ["3-5", "4-1", "4-5", "5-1"],
+                gameplan: "Early: Blaster base toplayın. Mid: Caitlyn ve Tristana'yı 2⭐ yapın. Late: Ambessa ile frontline domine edin, sniperlar arka hattı erişin.",
+                reasons: ["Backline erişimi mükemmel", "Çift carry sistemi", "Late game hyper scale"]
+            },
+            {
+                name: "🌟 Flex Chem-Baron (Renata + Smeech)",
+                carries: ["Renata", "Smeech", "Silco"],
+                requiredChampions: ["Renata", "Smeech", "Silco", "Scar", "Darius"],
+                recommendedItems: ["Archangel's Staff", "Morellonomicon", "Guardbreaker", "Sunfire Cape"],
+                playableStages: ["2-5", "3-2", "3-5", "4-1"],
+                gameplan: "Early: Chem-Baron 3 ile ekonomi avantajı. Mid: Renata AP eşyaları toplayın. Late: Silco ile süper güçlü zombie army.",
+                reasons: ["Econ trait avantajı", "Çok yönlü komplar", "Silco resurection OP"]
+            }
+        ];
+
+        // Set 16 Karakterler (cost bazlı)
+        const CHAMPIONS = [
+            // 1 Cost
+            "Anivia", "Blitzcrank", "Briar", "Caitlyn", "Illaoi", "Jarvan IV", "Jhin", "Kog'Maw","Lulu","Qiyana", "Rumble", "Shen", "Sona", "Viego",
+            // 2 Cost  
+            "Aphelios", "Ashe", "Bard", "Cho'Gath", "Ekko", "Graves", "Neeko", "Orianna","Poppy","Rek'Sai","Sion","Teemo", "Tristana", "Tryndamere", "Twisted Fate", "Vi", "Xin Zhao", "Yasuo", "Yorick",
+            // 3 Cost
+            "Ahri", "Darius", "Draven", "Dr. Mundo", "Gangplank", "Gwen", "Jinx", "Kennen", "Kobuko & Yuumi", "LeBlanc", "Leona", "Loris", "Malzahar", "Milio", "Nautilus", "Sejuani", "Vayne", "Zoe",
+            // 4 Cost
+            "Ambessa", "Bel'Veth", "Braum", "Diana", "Fizz", "Garen", "Kai'Sa", "Kalista", "Lissandra", "Lux", "Miss Fortune", "Nasus", "Nidalee", "Renekton", "Vadi Alameti", "Seraphine", "Singed", "Skarner", "Swain", "Taric", "Veigar", "Warwick", "Wukong", "Yone", "Yunara",
+            // 5 Cost
+            "Aatrox", "Annie", "Azir", "Fiddlesticks", "Galio", "Kindred", "Lucian & Senna", "Mel", "Ornn", "Sett", "Shyvana", "Tahm Kench", "T-Hex", "Thresh", "Tibbers", "Volibear", "Xerath", "Ziggs", "Zilean", "Aurelion Sol", "Baron Nashor", "Brock", "Ryze", "Sylas", "Zaahen"
+        ];
+
+        // Set 16 Temel Eşyalar
+        const ITEMS = [
+            "Ebedi Kılıç", "Son Fısıltı", "Dev Katili", "Kanasusamış",
+            "Runaan's Hurricane", "Guinsoo's Rageblade", "Statikk Hançer",
+            "Archangel's Staff", "Blue Buff", "Mücevherli Eldiven", "Morellonomicon",
+            "Sunfire Cape", "Warmog's Armor", "Titanın Azmi", "Gargoyl",
+            "Ionic Spark", "Guardbreaker", "Redemption"
+        ];
+
+        const STAGES = ["2-1", "2-5", "3-2", "3-5", "4-1", "4-5", "5-1", "5-5"];
+
+        // State Management
+        let selectedStage = null;
+        let selectedChampions = {}; // {championName: starLevel}
+        let selectedItems = [];
+
+        // ============================================
+        // UI BAŞLATMA
+        // ============================================
+        function initializeUI() {
+            // Aşama butonları
+            const stageContainer = document.getElementById('stageButtons');
+            STAGES.forEach(stage => {
+                const btn = document.createElement('div');
+                btn.className = 'stage-btn';
+                btn.textContent = stage;
+                btn.onclick = () => selectStage(stage, btn);
+                stageContainer.appendChild(btn);
+            });
+
+            // Karakter listesi
+            const championContainer = document.getElementById('championGrid');
+            CHAMPIONS.forEach(champ => {
+                const item = document.createElement('div');
+                item.className = 'champion-item';
+                item.innerHTML = `
+                    <div class="champion-name">${champ}</div>
+                    <div class="star-selector">
+                        <div class="star-btn" data-champ="${champ}" data-star="1">1⭐</div>
+                        <div class="star-btn" data-champ="${champ}" data-star="2">2⭐</div>
+                        <div class="star-btn" data-champ="${champ}" data-star="3">3⭐</div>
+                    </div>
+                `;
+                item.onclick = (e) => {
+                    if (e.target.classList.contains('star-btn')) {
+                        toggleChampion(e.target.dataset.champ, parseInt(e.target.dataset.star), item, e.target);
+                    }
+                };
+                championContainer.appendChild(item);
+            });
+
+            // Eşya butonları
+            const itemContainer = document.getElementById('itemGrid');
+            ITEMS.forEach(item => {
+                const btn = document.createElement('div');
+                btn.className = 'item-btn';
+                btn.textContent = item;
+                btn.onclick = () => toggleItem(item, btn);
+                itemContainer.appendChild(btn);
+            });
+        }
+
+        // ============================================
+        // SEÇİM FONKSİYONLARI
+        // ============================================
+        function selectStage(stage, btn) {
+            document.querySelectorAll('.stage-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedStage = stage;
+        }
+
+        function toggleChampion(champion, starLevel, item, starBtn) {
+            if (selectedChampions[champion] === starLevel) {
+                // Seçimi kaldır
+                delete selectedChampions[champion];
+                item.classList.remove('selected');
+                item.querySelectorAll('.star-btn').forEach(b => b.classList.remove('active'));
+            } else {
+                // Yeni seçim yap
+                selectedChampions[champion] = starLevel;
+                item.classList.add('selected');
+                item.querySelectorAll('.star-btn').forEach(b => b.classList.remove('active'));
+                starBtn.classList.add('active');
+            }
+        }
+
+        function toggleItem(item, btn) {
+            const index = selectedItems.indexOf(item);
+            if (index > -1) {
+                selectedItems.splice(index, 1);
+                btn.classList.remove('selected');
+            } else {
+                selectedItems.push(item);
+                btn.classList.add('selected');
+            }
+        }
+
+        // ============================================
+        // KOMPOZİSYON ANALİZ VE PUANLAMA
+        // ============================================
+        function analyzeAndSuggest() {
+            if (!selectedStage) {
+                addBotMessage("⚠️ Lütfen önce bir oyun aşaması seçin!");
+                return;
+            }
+
+            if (Object.keys(selectedChampions).length === 0) {
+                addBotMessage("⚠️ Lütfen en az bir karakter seçin!");
+                return;
+            }
+
+            // Kullanıcı mesajı göster
+            const champText = Object.entries(selectedChampions)
+                .map(([champ, stars]) => `${champ} (${stars}⭐)`)
+                .join(', ');
+            const itemText = selectedItems.length > 0 ? selectedItems.join(', ') : 'Yok';
+            
+            addUserMessage(`
+                <strong>Aşama:</strong> ${selectedStage}<br>
+                <strong>Karakterler:</strong> ${champText}<br>
+                <strong>Eşyalar:</strong> ${itemText}
+            `);
+
+            // Kompozisyonları puanla
+            const scoredComps = META_COMPS.map(comp => ({
+                comp,
+                score: calculateCompScore(comp)
+            }));
+
+            // En yüksek puanlı 3 kompozisyonu al
+            const topComps = scoredComps
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 3)
+                .filter(item => item.score > 0);
+
+            if (topComps.length === 0) {
+                addBotMessage("❌ Şu anki board durumunuza uygun güçlü bir kompozisyon bulunamadı. Farklı karakterler deneyin!");
+                return;
+            }
+
+            // Önerileri göster
+            topComps.forEach((item, index) => {
+                setTimeout(() => {
+                    displayCompSuggestion(item.comp, item.score, index + 1);
+                }, index * 300);
+            });
+        }
+
+        // ============================================
+        // PUANLAMA SİSTEMİ
+        // ============================================
+        function calculateCompScore(comp) {
+            let score = 0;
+
+            // 1. Aşama uygunluğu (+20 puan)
+            if (comp.playableStages.includes(selectedStage)) {
+                score += 20;
+            }
+
+            // 2. Karakter eşleşmesi
+            const myChamps = Object.keys(selectedChampions);
+            comp.requiredChampions.forEach(requiredChamp => {
+                if (myChamps.includes(requiredChamp)) {
+                    score += 15; // Her eşleşen karakter +15
+                    
+                    // Carry karakterse ekstra puan
+                    if (comp.carries.includes(requiredChamp)) {
+                        score += 10; // Carry varsa +10 ekstra
+                        
+                        // Yıldız seviyesi bonusu
+                        const stars = selectedChampions[requiredChamp];
+                        if (stars === 2) score += 8;
+                        if (stars === 3) score += 20; // 3 yıldız çok değerli
+                    }
+                }
+            });
+
+            // 3. Eşya uygunluğu
+            const matchingItems = selectedItems.filter(item => 
+                comp.recommendedItems.includes(item)
+            );
+            score += matchingItems.length * 5; // Her uygun eşya +5
+
+            // 4. Eşya sayısı bonusu (carry'e giydirebilme potansiyeli)
+            if (selectedItems.length >= 3) score += 8;
+
+            // 5. Carry varlığı kritik önemde
+            const hasCarry = comp.carries.some(carry => myChamps.includes(carry));
+            if (hasCarry) {
+                score += 25; // Carry varsa büyük bonus
+            }
+
+            return score;
+        }
+
+        // ============================================
+        // MESAJ GÖRÜNTÜLEME
+        // ============================================
+        function addUserMessage(content) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.innerHTML = `<div class="user-message">${content}</div>`;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addBotMessage(content) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.innerHTML = `<div class="bot-message">${content}</div>`;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function displayCompSuggestion(comp, score, rank) {
+            const myChamps = Object.keys(selectedChampions);
+            const matchingChamps = comp.requiredChampions.filter(c => myChamps.includes(c));
+            const matchingItems = selectedItems.filter(item => comp.recommendedItems.includes(item));
+
+            const content = `
+                <div class="comp-name">#${rank} ${comp.name}</div>
+                
+                <div class="comp-section">
+                    <strong>💯 Uygunluk Puanı:</strong> ${score}/100
+                </div>
+
+                <div class="comp-section">
+                    <strong>✨ Neden Bu Komp?</strong><br>
+                    ${comp.reasons.map(r => `• ${r}`).join('<br>')}
+                </div>
+
+                <div class="comp-section">
+                    <strong>🎯 Ana Taşıyıcılar:</strong> ${comp.carries.join(', ')}
+                </div>
+
+                <div class="comp-section">
+                    <strong>✅ Sahip Olduğunuz Üniteler:</strong><br>
+                    ${matchingChamps.length > 0 ? matchingChamps.map(c => `${c} (${selectedChampions[c]}⭐)`).join(', ') : 'Henüz yok - Toplayın!'}
+                </div>
+
+                <div class="comp-section">
+                    <strong>📋 Tüm Gerekli Karakterler:</strong><br>
+                    ${comp.requiredChampions.join(', ')}
+                </div>
+
+                <div class="comp-section">
+                    <strong>⚔️ Öncelikli Eşyalar:</strong><br>
+                    ${comp.recommendedItems.join(', ')}
+                </div>
+
+                ${matchingItems.length > 0 ? `
+                <div class="comp-section">
+                    <strong>🎁 Uygun Eşyalarınız:</strong> ${matchingItems.join(', ')}
+                </div>
+                ` : ''}
+
+                <div class="comp-section">
+                    <strong>📈 Oyun Planı:</strong><br>
+                    ${comp.gameplan}
+                </div>
+            `;
+
+            addBotMessage(content);
+        }
+
+        // Sayfa yüklendiğinde başlat
+        initializeUI();
+    </script>
+</body>
+</html>
